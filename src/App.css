@@ -278,8 +278,16 @@ td {
   color: var(--ink);
 }
 
-tr:last-child td {
+tbody tr:last-child td {
   border-bottom: none;
+}
+
+.totals-row td {
+  border-top: 1px solid var(--line);
+  border-bottom: none;
+  padding-top: 0.7rem;
+  font-weight: 600;
+  color: var(--ink);
 }
 
 td.path,

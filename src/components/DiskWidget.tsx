@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts'
 import type { DiskSnapshot } from '../api/types'
-import { formatBytes, formatShortTime, formatTime } from '../lib/format'
+import { formatBytes, formatShortTime, formatTime, sum } from '../lib/format'
 import { snapshotTotals, toSeries } from '../lib/series'
 
 type Props = {
@@ -57,6 +57,22 @@ export function DiskWidget({ latest, history }: Props) {
     totals.volume_total > 0
       ? ((totals.volume_total - totals.volume_available) / totals.volume_total) * 100
       : 0
+  const tmTotals = {
+    data: sum(latest.tendermint_nodes.map((n) => n.data_dir_bytes)),
+    txIndex: sum(latest.tendermint_nodes.map((n) => n.tx_index_db_bytes)),
+    evidence: sum(latest.tendermint_nodes.map((n) => n.evidence_db_bytes)),
+  }
+  const abciTotals = {
+    data: sum(latest.abci_apps.map((n) => n.data_dir_bytes)),
+    rocksdb: sum(latest.abci_apps.map((n) => n.rocksdb_bytes)),
+    capacity: sum(latest.abci_apps.map((n) => n.capacity_bytes)),
+    indexedTx: sum(
+      latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_transactions_count ?? 0),
+    ),
+    indexedEvents: sum(
+      latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_events_count ?? 0),
+    ),
+  }
 
   return (
     <section className="disk-widget">
@@ -191,6 +207,15 @@ export function DiskWidget({ latest, history }: Props) {
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="totals-row">
+                <td>Total</td>
+                <td>{formatBytes(tmTotals.data)}</td>
+                <td>{formatBytes(tmTotals.txIndex)}</td>
+                <td>{formatBytes(tmTotals.evidence)}</td>
+                <td>—</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -221,6 +246,17 @@ export function DiskWidget({ latest, history }: Props) {
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="totals-row">
+                <td>Total</td>
+                <td>{formatBytes(abciTotals.data)}</td>
+                <td>{formatBytes(abciTotals.rocksdb)}</td>
+                <td>{formatBytes(abciTotals.capacity)}</td>
+                <td>
+                  {abciTotals.indexedTx} / {abciTotals.indexedEvents}
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 

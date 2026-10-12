@@ -71,9 +71,7 @@ export function DiskWidget({ latest, history }: Props) {
     indexedTx: sum(
       latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_transactions_count ?? 0),
     ),
-    indexedEvents: sum(
-      latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_events_count ?? 0),
-    ),
+    indexedEvents: sum(latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_events_count ?? 0)),
   }
 
   return (
@@ -267,7 +265,6 @@ export function DiskWidget({ latest, history }: Props) {
             </tfoot>
           </table>
         </div>
-
       </div>
 
       <div className="cado-grid">

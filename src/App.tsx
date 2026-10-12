@@ -65,7 +65,13 @@ export default function App() {
   }
 
   const apiLabel =
-    state.status === 'ready' ? (state.healthy ? 'up' : 'down') : state.status === 'error' ? 'down' : '…'
+    state.status === 'ready'
+      ? state.healthy
+        ? 'up'
+        : 'down'
+      : state.status === 'error'
+        ? 'down'
+        : '…'
 
   return (
     <div className={`eld-shell${isLightTheme ? ' eld-shell--light' : ''}`}>
@@ -120,13 +126,12 @@ export default function App() {
               <p>Could not reach the analytics API.</p>
               <p>{state.message}</p>
               <p className="muted">
-                Check <code>ANALYTICS_API_URL</code> in <code>.env</code> (proxied as <code>/api</code>).
+                Check <code>ANALYTICS_API_URL</code> in <code>.env</code> (proxied as{' '}
+                <code>/api</code>).
               </p>
             </div>
           )}
-          {state.status === 'ready' && (
-            <DiskWidget latest={state.latest} history={state.history} />
-          )}
+          {state.status === 'ready' && <DiskWidget latest={state.latest} history={state.history} />}
         </main>
       </div>
     </div>

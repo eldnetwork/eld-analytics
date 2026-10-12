@@ -18,9 +18,10 @@ export function snapshotTotals(snapshot: DiskSnapshot) {
   const abci_total = sum(snapshot.abci_apps.map((n) => n.data_dir_bytes))
   const abci_rocksdb = sum(snapshot.abci_apps.map((n) => n.rocksdb_bytes))
   const abci_capacity = sum(snapshot.abci_apps.map((n) => n.capacity_bytes))
-  const volume_total = snapshot.abci_apps[0]?.volume_total_bytes
-    ?? snapshot.tendermint_nodes[0]?.volume_total_bytes
-    ?? 0
+  const volume_total =
+    snapshot.abci_apps[0]?.volume_total_bytes ??
+    snapshot.tendermint_nodes[0]?.volume_total_bytes ??
+    0
   const volume_available = Math.min(
     ...[
       ...snapshot.abci_apps.map((n) => n.volume_available_bytes),

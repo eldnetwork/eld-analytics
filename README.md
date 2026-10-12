@@ -21,3 +21,5 @@ Open [http://localhost:5173](http://localhost:5173). Vite proxies `/api/*` to `h
 - `GET /analytics/disk/history?limit=48`
 
 The main widget shows disk growth over time plus the latest Tendermint / ABCI breakdown in one place. It refreshes every 30 seconds.
+
+UI styling follows the [Eld Blockchain Explorer](https://github.com/eldnetwork/eld-blockchain-explorer) shell: Ioskeley Mono, dark/light themes, and accent `#ff7a18`. Font files are SIL OFL — see `src/fonts/LICENSE`.

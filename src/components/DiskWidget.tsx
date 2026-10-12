@@ -19,10 +19,12 @@ type Props = {
 }
 
 const COLORS = {
-  tendermint: '#0f766e',
-  abci: '#c2410c',
-  cluster: '#1e3a5f',
-  grid: '#d6d3d1',
+  tendermint: '#62d58b',
+  abci: '#ff7a18',
+  cluster: '#8eb2ff',
+  grid: 'var(--lh-border)',
+  tick: 'var(--lh-faint)',
+  muted: 'var(--lh-muted)',
 }
 
 function BytesTooltip({
@@ -123,14 +125,14 @@ export function DiskWidget({ latest, history }: Props) {
               <XAxis
                 dataKey="collected_at"
                 tickFormatter={formatShortTime}
-                tick={{ fill: '#78716c', fontSize: 12 }}
+                tick={{ fill: COLORS.tick, fontSize: 11, fontFamily: 'IoskeleyMono, monospace' }}
                 axisLine={false}
                 tickLine={false}
                 minTickGap={40}
               />
               <YAxis
                 tickFormatter={(v: number) => formatBytes(v, 0)}
-                tick={{ fill: '#78716c', fontSize: 12 }}
+                tick={{ fill: COLORS.tick, fontSize: 11, fontFamily: 'IoskeleyMono, monospace' }}
                 axisLine={false}
                 tickLine={false}
                 width={72}
@@ -140,7 +142,13 @@ export function DiskWidget({ latest, history }: Props) {
                 verticalAlign="top"
                 height={36}
                 iconType="plainline"
-                wrapperStyle={{ fontSize: 13, color: '#44403c' }}
+                wrapperStyle={{
+                  fontSize: 11,
+                  color: COLORS.muted,
+                  fontFamily: 'IoskeleyMono, monospace',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                }}
               />
               <Area
                 type="monotone"

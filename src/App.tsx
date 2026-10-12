@@ -6,6 +6,7 @@ import './App.css'
 
 const REFRESH_MS = 30_000
 const HISTORY_LIMIT = 48
+const THEME_KEY = 'eld-home-theme'
 
 type LoadState =
   | { status: 'loading' }
@@ -15,6 +16,10 @@ type LoadState =
 export default function App() {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [isLightTheme, setIsLightTheme] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem(THEME_KEY) === 'light'
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -51,40 +56,79 @@ export default function App() {
     }
   }, [])
 
+  const toggleTheme = () => {
+    setIsLightTheme((prev) => {
+      const next = !prev
+      window.localStorage.setItem(THEME_KEY, next ? 'light' : 'dark')
+      return next
+    })
+  }
+
+  const apiLabel =
+    state.status === 'ready' ? (state.healthy ? 'up' : 'down') : state.status === 'error' ? 'down' : '…'
+
   return (
-    <div className="app">
-      <header className="app-header">
-        <div>
-          <p className="brand">ELD Analytics</p>
-          <h1>Local cluster disk</h1>
+    <div className={`eld-shell${isLightTheme ? ' eld-shell--light' : ''}`}>
+      <header className="shell-header">
+        <div className="shell-brand">
+          <span className="shell-brand__mark">E</span>
+          <p className="shell-brand__text">ELD Analytics</p>
         </div>
-        <div className="app-header__status">
-          {state.status === 'ready' && (
-            <span className={state.healthy ? 'badge ok' : 'badge warn'}>
-              {state.healthy ? 'API up' : 'Health check failed'}
-            </span>
-          )}
-          {updatedAt && (
-            <span className="muted">Refreshed {updatedAt.toLocaleTimeString()}</span>
-          )}
+        <div className="shell-meta">
+          <div className="shell-meta__stack">
+            <div className="shell-meta__row">
+              <span className="shell-meta__label">api:</span>
+              <span
+                className={`shell-meta__value${
+                  apiLabel === 'up' ? ' is-ok' : apiLabel === 'down' ? ' is-bad' : ''
+                }`}
+              >
+                {apiLabel}
+              </span>
+            </div>
+            <div className="shell-meta__row">
+              <span className="shell-meta__label">refreshed:</span>
+              <span className="shell-meta__value">
+                {updatedAt ? updatedAt.toLocaleTimeString() : '--'}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={isLightTheme ? 'Switch to dark mode' : 'Switch to light mode'}
+            title={isLightTheme ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {isLightTheme ? 'Dark' : 'Light'}
+          </button>
         </div>
       </header>
 
-      <main>
-        {state.status === 'loading' && <p className="status-line">Loading disk analytics…</p>}
-        {state.status === 'error' && (
-          <div className="status-line error">
-            <p>Could not reach the analytics API.</p>
-            <p>{state.message}</p>
-            <p className="muted">
-              Expecting <code>http://127.0.0.1:9010</code> (proxied as <code>/api</code>).
-            </p>
+      <div className="app">
+        <header className="app-header">
+          <div>
+            <p className="eyebrow">Local cluster</p>
+            <h1>Disk analytics</h1>
           </div>
-        )}
-        {state.status === 'ready' && (
-          <DiskWidget latest={state.latest} history={state.history} />
-        )}
-      </main>
+        </header>
+
+        <main>
+          {state.status === 'loading' && <p className="status-line">Loading disk analytics…</p>}
+          {state.status === 'error' && (
+            <div className="status-line error">
+              <p>Could not reach the analytics API.</p>
+              <p>{state.message}</p>
+              <p className="muted">
+                Expecting <code>http://127.0.0.1:9010</code> (proxied as <code>/api</code>).
+              </p>
+            </div>
+          )}
+          {state.status === 'ready' && (
+            <DiskWidget latest={state.latest} history={state.history} />
+          )}
+        </main>
+      </div>
     </div>
   )
 }

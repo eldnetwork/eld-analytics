@@ -4,15 +4,20 @@ Local dashboard for cluster disk analytics from `http://127.0.0.1:9010`.
 
 ## Run
 
-Needs the ELD analytics API on port `9010`, then:
+Needs the ELD analytics API running, then:
 
 ```bash
 nvm use 22   # or any Node 20+
+cp .env.example .env   # edit ANALYTICS_API_URL if needed
 npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). Vite proxies `/api/*` to `http://127.0.0.1:9010/*`.
+Open [http://localhost:5173](http://localhost:5173). Vite proxies `/api/*` to `ANALYTICS_API_URL` (default `http://127.0.0.1:9010`).
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `ANALYTICS_API_URL` | `http://127.0.0.1:9010` | Analytics API base URL for the `/api` proxy |
 
 ## Data
 

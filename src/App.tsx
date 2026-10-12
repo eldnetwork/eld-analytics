@@ -120,7 +120,7 @@ export default function App() {
               <p>Could not reach the analytics API.</p>
               <p>{state.message}</p>
               <p className="muted">
-                Expecting <code>http://127.0.0.1:9010</code> (proxied as <code>/api</code>).
+                Check <code>ANALYTICS_API_URL</code> in <code>.env</code> (proxied as <code>/api</code>).
               </p>
             </div>
           )}

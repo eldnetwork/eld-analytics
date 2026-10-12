@@ -268,31 +268,43 @@ export function DiskWidget({ latest, history }: Props) {
           </table>
         </div>
 
-        <div className="panel">
-          <h3>Cado inventory (node 1)</h3>
-          <ul className="pill-list">
-            {(latest.abci_apps[0]?.rocksdb_inventory?.cado_type_counts ?? [])
-              .filter((row) => row.count > 0)
-              .map((row) => (
-                <li key={row.cado_type}>
-                  <span>{row.cado_type}</span>
-                  <strong>{row.count}</strong>
-                </li>
-              ))}
-          </ul>
-        </div>
+      </div>
 
-        <div className="panel">
-          <h3>Largest ABCI files (node 1)</h3>
-          <ul className="file-list">
-            {(latest.abci_apps[0]?.top_files ?? []).map((file) => (
-              <li key={file.relative_path}>
-                <code>{file.relative_path}</code>
-                <span>{formatBytes(file.size_bytes)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className="cado-grid">
+        {latest.abci_apps.map((app) => {
+          const counts = (app.rocksdb_inventory?.cado_type_counts ?? []).filter(
+            (row) => row.count > 0,
+          )
+          return (
+            <div className="panel" key={app.node_id}>
+              <h3>Cado inventory (node {app.node_id})</h3>
+              {counts.length === 0 ? (
+                <p className="panel-empty">No counted types</p>
+              ) : (
+                <ul className="pill-list pill-list--stack">
+                  {counts.map((row) => (
+                    <li key={row.cado_type}>
+                      <span>{row.cado_type}</span>
+                      <strong>{row.count}</strong>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="panel panel--full">
+        <h3>Largest ABCI files (node 1)</h3>
+        <ul className="file-list">
+          {(latest.abci_apps[0]?.top_files ?? []).map((file) => (
+            <li key={file.relative_path}>
+              <code>{file.relative_path}</code>
+              <span>{formatBytes(file.size_bytes)}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   )

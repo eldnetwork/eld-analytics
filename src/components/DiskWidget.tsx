@@ -82,14 +82,14 @@ export function DiskWidget({ latest, history }: Props) {
           <h2>Cluster storage</h2>
         </div>
         <div className="disk-widget__meta">
-          <span>Latest sample</span>
-          <strong>{formatTime(latest.collected_at)}</strong>
           {latest.block_height != null ? (
             <>
               <span>Block height</span>
               <strong>{latest.block_height.toLocaleString()}</strong>
             </>
           ) : null}
+          <span>Latest sample</span>
+          <strong>{formatTime(latest.collected_at)}</strong>
         </div>
       </header>
 

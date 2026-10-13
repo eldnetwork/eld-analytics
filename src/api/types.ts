@@ -49,6 +49,8 @@ export type AbciApp = {
 
 export type DiskSnapshot = {
   collected_at: string
+  /** Chain tip at sample time; null/undefined when the collector could not reach RPC. */
+  block_height?: number | null
   tendermint_nodes: TendermintNode[]
   abci_apps: AbciApp[]
 }

@@ -15,11 +15,13 @@ export type CfSstBytes = {
 
 export type RocksdbInventory = {
   cado_type_counts: CadoTypeCount[]
-  indexed_transactions_count: number
-  indexed_events_count: number
+  /** Primary indexed transaction rows; null when the inventory could not count. */
+  indexed_transactions_count: number | null
+  /** Primary indexed event rows; null when the inventory could not count. */
+  indexed_events_count: number | null
   cf_sst_bytes: CfSstBytes[]
-  pinboard_blob_cf_sst_bytes: number
-  other_cf_sst_bytes: number
+  pinboard_blob_cf_sst_bytes: number | null
+  other_cf_sst_bytes: number | null
 }
 
 export type TendermintNode = {

@@ -64,14 +64,22 @@ export function DiskWidget({ latest, history }: Props) {
     txIndex: sum(latest.tendermint_nodes.map((n) => n.tx_index_db_bytes)),
     evidence: sum(latest.tendermint_nodes.map((n) => n.evidence_db_bytes)),
   }
+  // Each ABCI node keeps its own indexer copy — use the max so the headline
+  // is not inflated when several nodes are caught up.
+  const indexedTxCount = Math.max(
+    0,
+    ...latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_transactions_count ?? 0),
+  )
+  const indexedEventCount = Math.max(
+    0,
+    ...latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_events_count ?? 0),
+  )
   const abciTotals = {
     data: sum(latest.abci_apps.map((n) => n.data_dir_bytes)),
     rocksdb: sum(latest.abci_apps.map((n) => n.rocksdb_bytes)),
     capacity: sum(latest.abci_apps.map((n) => n.capacity_bytes)),
-    indexedTx: sum(
-      latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_transactions_count ?? 0),
-    ),
-    indexedEvents: sum(latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_events_count ?? 0)),
+    indexedTx: indexedTxCount,
+    indexedEvents: indexedEventCount,
   }
 
   return (
@@ -105,6 +113,14 @@ export function DiskWidget({ latest, history }: Props) {
         <div className="stat">
           <span>ABCI apps</span>
           <strong>{formatBytes(totals.abci_total)}</strong>
+        </div>
+        <div className="stat">
+          <span>Indexed txs</span>
+          <strong>{indexedTxCount.toLocaleString()}</strong>
+        </div>
+        <div className="stat">
+          <span>Indexed events</span>
+          <strong>{indexedEventCount.toLocaleString()}</strong>
         </div>
         <div className="stat">
           <span>Volume free</span>
@@ -252,7 +268,7 @@ export function DiskWidget({ latest, history }: Props) {
                   <td>{formatBytes(app.capacity_bytes)}</td>
                   <td>
                     {app.rocksdb_inventory
-                      ? `${app.rocksdb_inventory.indexed_transactions_count} / ${app.rocksdb_inventory.indexed_events_count}`
+                      ? `${app.rocksdb_inventory.indexed_transactions_count ?? '—'} / ${app.rocksdb_inventory.indexed_events_count ?? '—'}`
                       : '—'}
                   </td>
                 </tr>

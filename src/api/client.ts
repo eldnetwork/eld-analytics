@@ -19,10 +19,10 @@ export function fetchHealth(): Promise<unknown> {
   return getJson('/health')
 }
 
-export function fetchLatestDisk(): Promise<DiskSnapshot> {
+export function fetchLatestDisk(): Promise<DiskSnapshot | null> {
   return getJson('/analytics/disk/latest')
 }
 
-export function fetchDiskHistory(limit = 24): Promise<DiskHistory> {
+export function fetchDiskHistory(limit = 24): Promise<DiskHistory | null> {
   return getJson(`/analytics/disk/history?limit=${limit}`)
 }

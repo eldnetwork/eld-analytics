@@ -53,8 +53,8 @@ export type DiskSnapshot = {
   collected_at: string
   /** Chain tip at sample time; null/undefined when the collector could not reach RPC. */
   block_height?: number | null
-  tendermint_nodes: TendermintNode[]
-  abci_apps: AbciApp[]
+  tendermint_nodes?: TendermintNode[] | null
+  abci_apps?: AbciApp[] | null
 }
 
 export type DiskHistory = DiskSnapshot[]

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchDiskHistory, fetchHealth, fetchLatestDisk } from './api/client'
 import type { DiskSnapshot } from './api/types'
 import { DiskWidget } from './components/DiskWidget'
+import { isDiskSnapshot } from './lib/series'
 import './App.css'
 
 const REFRESH_MS = 30_000
@@ -10,6 +11,7 @@ const THEME_KEY = 'eld-home-theme'
 
 type LoadState =
   | { status: 'loading' }
+  | { status: 'empty'; healthy: boolean }
   | { status: 'error'; message: string }
   | { status: 'ready'; latest: DiskSnapshot; history: DiskSnapshot[]; healthy: boolean }
 
@@ -26,10 +28,14 @@ export default function App() {
 
     async function load() {
       try {
-        const [latest, history] = await Promise.all([
+        const [latestRaw, historyRaw] = await Promise.all([
           fetchLatestDisk(),
           fetchDiskHistory(HISTORY_LIMIT),
         ])
+        const history = (Array.isArray(historyRaw) ? historyRaw : []).filter(isDiskSnapshot)
+        const latest = isDiskSnapshot(latestRaw)
+          ? latestRaw
+          : [...history].sort((a, b) => a.collected_at.localeCompare(b.collected_at)).at(-1)
         let healthy = true
         try {
           await fetchHealth()
@@ -37,8 +43,12 @@ export default function App() {
           healthy = false
         }
         if (cancelled) return
-        setState({ status: 'ready', latest, history, healthy })
         setUpdatedAt(new Date())
+        if (!latest) {
+          setState({ status: 'empty', healthy })
+          return
+        }
+        setState({ status: 'ready', latest, history, healthy })
       } catch (error) {
         if (cancelled) return
         setState({
@@ -65,7 +75,7 @@ export default function App() {
   }
 
   const apiLabel =
-    state.status === 'ready'
+    state.status === 'ready' || state.status === 'empty'
       ? state.healthy
         ? 'up'
         : 'down'
@@ -121,6 +131,15 @@ export default function App() {
 
         <main>
           {state.status === 'loading' && <p className="status-line">Loading disk analytics…</p>}
+          {state.status === 'empty' && (
+            <div className="status-line">
+              <p>No disk snapshot yet.</p>
+              <p className="muted">
+                Snapshots are taken every hour. <code>/analytics/disk/latest</code> returned
+                nothing, so the collector may still be starting.
+              </p>
+            </div>
+          )}
           {state.status === 'error' && (
             <div className="status-line error">
               <p>Could not reach the analytics API.</p>

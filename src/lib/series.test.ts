@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DiskSnapshot } from '../api/types'
-import { snapshotTotals, toSeries } from './series'
+import { isDiskSnapshot, snapshotTotals, toSeries } from './series'
 
 function snapshot(partial: Partial<DiskSnapshot> & { collected_at: string }): DiskSnapshot {
   return {
@@ -52,6 +52,15 @@ describe('snapshotTotals', () => {
     expect(totals.volume_total).toBe(1000)
     expect(totals.volume_available).toBe(350)
   })
+
+  it('returns zeros when the API has no snapshot', () => {
+    const totals = snapshotTotals(null)
+    expect(totals.tendermint_total).toBe(0)
+    expect(totals.abci_total).toBe(0)
+    expect(totals.cluster_total).toBe(0)
+    expect(totals.volume_total).toBe(0)
+    expect(totals.volume_available).toBe(0)
+  })
 })
 
 describe('toSeries', () => {
@@ -95,5 +104,13 @@ describe('toSeries', () => {
     expect(series[0]?.collected_at).toBe('2026-10-12T00:00:00Z')
     expect(series[0]?.['abci_abci-0']).toBe(10)
     expect(series[1]?.['tm_tm-0']).toBe(20)
+  })
+
+  it('skips null history entries from the API', () => {
+    const series = toSeries([null, snapshot({ collected_at: '2026-10-12T00:00:00Z' })])
+
+    expect(series).toHaveLength(1)
+    expect(series[0]?.collected_at).toBe('2026-10-12T00:00:00Z')
+    expect(isDiskSnapshot(null)).toBe(false)
   })
 })

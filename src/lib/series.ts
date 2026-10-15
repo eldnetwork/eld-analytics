@@ -13,19 +13,24 @@ export type SeriesPoint = {
   [key: `abci_${string}`]: number | string
 }
 
-export function snapshotTotals(snapshot: DiskSnapshot) {
-  const tendermint_total = sum(snapshot.tendermint_nodes.map((n) => n.data_dir_bytes))
-  const abci_total = sum(snapshot.abci_apps.map((n) => n.data_dir_bytes))
-  const abci_rocksdb = sum(snapshot.abci_apps.map((n) => n.rocksdb_bytes))
-  const abci_capacity = sum(snapshot.abci_apps.map((n) => n.capacity_bytes))
+export function isDiskSnapshot(value: unknown): value is DiskSnapshot {
+  if (value == null || typeof value !== 'object') return false
+  return typeof (value as DiskSnapshot).collected_at === 'string'
+}
+
+export function snapshotTotals(snapshot: DiskSnapshot | null | undefined) {
+  const tendermintNodes = snapshot?.tendermint_nodes ?? []
+  const abciApps = snapshot?.abci_apps ?? []
+  const tendermint_total = sum(tendermintNodes.map((n) => n.data_dir_bytes))
+  const abci_total = sum(abciApps.map((n) => n.data_dir_bytes))
+  const abci_rocksdb = sum(abciApps.map((n) => n.rocksdb_bytes))
+  const abci_capacity = sum(abciApps.map((n) => n.capacity_bytes))
   const volume_total =
-    snapshot.abci_apps[0]?.volume_total_bytes ??
-    snapshot.tendermint_nodes[0]?.volume_total_bytes ??
-    0
+    abciApps[0]?.volume_total_bytes ?? tendermintNodes[0]?.volume_total_bytes ?? 0
   const volume_available = Math.min(
     ...[
-      ...snapshot.abci_apps.map((n) => n.volume_available_bytes),
-      ...snapshot.tendermint_nodes.map((n) => n.volume_available_bytes),
+      ...abciApps.map((n) => n.volume_available_bytes),
+      ...tendermintNodes.map((n) => n.volume_available_bytes),
     ].filter((n) => Number.isFinite(n)),
   )
   return {
@@ -39,8 +44,9 @@ export function snapshotTotals(snapshot: DiskSnapshot) {
   }
 }
 
-export function toSeries(history: DiskSnapshot[]): SeriesPoint[] {
-  return [...history]
+export function toSeries(history: Array<DiskSnapshot | null | undefined>): SeriesPoint[] {
+  return history
+    .filter(isDiskSnapshot)
     .sort((a, b) => a.collected_at.localeCompare(b.collected_at))
     .map((snapshot) => {
       const totals = snapshotTotals(snapshot)
@@ -54,10 +60,10 @@ export function toSeries(history: DiskSnapshot[]): SeriesPoint[] {
         cluster_total: totals.cluster_total,
       }
 
-      for (const node of snapshot.tendermint_nodes) {
+      for (const node of snapshot.tendermint_nodes ?? []) {
         point[`tm_${node.node_id}`] = node.data_dir_bytes
       }
-      for (const app of snapshot.abci_apps) {
+      for (const app of snapshot.abci_apps ?? []) {
         point[`abci_${app.node_id}`] = app.data_dir_bytes
       }
 

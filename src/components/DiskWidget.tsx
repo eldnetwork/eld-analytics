@@ -53,6 +53,8 @@ function BytesTooltip({
 }
 
 export function DiskWidget({ latest, history }: Props) {
+  const tendermintNodes = latest.tendermint_nodes ?? []
+  const abciApps = latest.abci_apps ?? []
   const series = toSeries(history.length ? history : [latest])
   const totals = snapshotTotals(latest)
   const volumeUsedPct =
@@ -60,24 +62,24 @@ export function DiskWidget({ latest, history }: Props) {
       ? ((totals.volume_total - totals.volume_available) / totals.volume_total) * 100
       : 0
   const tmTotals = {
-    data: sum(latest.tendermint_nodes.map((n) => n.data_dir_bytes)),
-    txIndex: sum(latest.tendermint_nodes.map((n) => n.tx_index_db_bytes)),
-    evidence: sum(latest.tendermint_nodes.map((n) => n.evidence_db_bytes)),
+    data: sum(tendermintNodes.map((n) => n.data_dir_bytes)),
+    txIndex: sum(tendermintNodes.map((n) => n.tx_index_db_bytes)),
+    evidence: sum(tendermintNodes.map((n) => n.evidence_db_bytes)),
   }
   // Each ABCI node keeps its own indexer copy — use the max so the headline
   // is not inflated when several nodes are caught up.
   const indexedTxCount = Math.max(
     0,
-    ...latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_transactions_count ?? 0),
+    ...abciApps.map((n) => n.rocksdb_inventory?.indexed_transactions_count ?? 0),
   )
   const indexedEventCount = Math.max(
     0,
-    ...latest.abci_apps.map((n) => n.rocksdb_inventory?.indexed_events_count ?? 0),
+    ...abciApps.map((n) => n.rocksdb_inventory?.indexed_events_count ?? 0),
   )
   const abciTotals = {
-    data: sum(latest.abci_apps.map((n) => n.data_dir_bytes)),
-    rocksdb: sum(latest.abci_apps.map((n) => n.rocksdb_bytes)),
-    capacity: sum(latest.abci_apps.map((n) => n.capacity_bytes)),
+    data: sum(abciApps.map((n) => n.data_dir_bytes)),
+    rocksdb: sum(abciApps.map((n) => n.rocksdb_bytes)),
+    capacity: sum(abciApps.map((n) => n.capacity_bytes)),
     indexedTx: indexedTxCount,
     indexedEvents: indexedEventCount,
   }
@@ -92,7 +94,7 @@ export function DiskWidget({ latest, history }: Props) {
         <div className="disk-widget__meta">
           {latest.block_height != null ? (
             <>
-              <span>Block height</span>
+              <span>Latest snapshot block height</span>
               <strong>{latest.block_height.toLocaleString()}</strong>
             </>
           ) : null}
@@ -133,9 +135,10 @@ export function DiskWidget({ latest, history }: Props) {
         <div className="chart-panel__title">
           <h3>Disk over time</h3>
           <p>
+            Snapshots are taken every hour.{' '}
             {series.length === 1
               ? 'Only one sample so far — the line will fill in as history grows.'
-              : `${series.length} samples from /analytics/disk/history`}
+              : `${series.length} samples from /analytics/disk/history.`}
           </p>
         </div>
         <div className="chart-panel__body">
@@ -221,7 +224,7 @@ export function DiskWidget({ latest, history }: Props) {
               </tr>
             </thead>
             <tbody>
-              {latest.tendermint_nodes.map((node) => (
+              {tendermintNodes.map((node) => (
                 <tr key={node.node_id}>
                   <td>{node.node_id}</td>
                   <td>{formatBytes(node.data_dir_bytes)}</td>
@@ -260,7 +263,7 @@ export function DiskWidget({ latest, history }: Props) {
               </tr>
             </thead>
             <tbody>
-              {latest.abci_apps.map((app) => (
+              {abciApps.map((app) => (
                 <tr key={app.node_id}>
                   <td>{app.node_id}</td>
                   <td>{formatBytes(app.data_dir_bytes)}</td>
@@ -290,7 +293,7 @@ export function DiskWidget({ latest, history }: Props) {
       </div>
 
       <div className="cado-grid">
-        {latest.abci_apps.map((app) => {
+        {abciApps.map((app) => {
           const counts = (app.rocksdb_inventory?.cado_type_counts ?? []).filter(
             (row) => row.count > 0,
           )
@@ -317,7 +320,7 @@ export function DiskWidget({ latest, history }: Props) {
       <div className="panel panel--full">
         <h3>Largest ABCI files (node 1)</h3>
         <ul className="file-list">
-          {(latest.abci_apps[0]?.top_files ?? []).map((file) => (
+          {(abciApps[0]?.top_files ?? []).map((file) => (
             <li key={file.relative_path}>
               <code>{file.relative_path}</code>
               <span>{formatBytes(file.size_bytes)}</span>
